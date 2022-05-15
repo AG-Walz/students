@@ -1,34 +1,56 @@
-
-library("DESeq2")
-library("tximport")
-library("tximportData")
-library("readr")
-library("EnsDb.Hsapiens.v86") 
-library("utils")
-library("devtools")
-library("ashr")
-library("ggrepel")
-library("dplyr")
-library("ggplot2")
-library("ggVennDiagram")
-library("VennDiagram")
-library("RColorBrewer")
-library("tibble")
-library("pheatmap")
-library("viridis")
-library("clusterProfiler")
-library("tidyr")
-library("pcaExplorer")
-library("readxl")
-library("stringr")
-
-
+## I would suggest to move input content always to the top, this way you can
+## find it faster
 setwd("/Users/cschwitalla/Documents/transcriptomics_results/Pipeline_running/transcriptomics_results/Quant_files/")
+## And I was wondering why you define the filedir with the same repository?
+## After setwd, you can also mention:
+##  filedir <- getwd()
+## Or define the filedir first and then use that for
+##  setwd(filedir)
 filedir = "/Users/cschwitalla/Documents/transcriptomics_results/Pipeline_running/transcriptomics_results/Quant_files/"
 
+# library("DESeq2")
+# library("tximport")
+# library("tximportData")
+# library("readr")
+# library("EnsDb.Hsapiens.v86") 
+# library("utils")
+# library("devtools")
+# library("ashr")
+# library("ggrepel")
+# library("dplyr")
+# library("ggplot2")
+# library("ggVennDiagram")
+# library("VennDiagram")
+# library("RColorBrewer")
+# library("tibble")
+# library("pheatmap")
+# library("viridis")
+# library("clusterProfiler")
+# library("tidyr")
+# library("pcaExplorer")
+# library("readxl")
+# library("stringr")
+
+## Suggestion Marissa
+## ---------------------
+necessaryLibs <- c("DESeq2", "tximport", "tximportData", "readr",
+                   "EnsDb.Hsapiens.v86", "utils", "devtools", "ashr", "ggrepel",
+                   "dplyr", "ggplot2", "ggVennDiagram", "VennDiagram",
+                   "RColorBrewer", "tibble", "pheatmap", "viridis",
+                   "clusterProfiler", "tidyr", "pcaExplorer", "readxl",
+                   "stringr")
+# invisible(lapply(necessaryLibs, BiocManager::install, update = F, ask = F))
+suppressMessages(invisible(lapply(necessaryLibs, library, character.only = T)))
 #list of all file names -----------------------------------
-file_names = list.files(path = filedir )
+## Here, try to reduce the use of "=" in R when you assign a vector, this can 
+## potentially raise errors
+## Additionally, try to write your though process down
+
+## Listing all files in the file directory
+file_names <- list.files(path = filedir)
+## Obtaining the absolute path of files that are matching the pattern
 files <- dir(filedir, recursive= TRUE, pattern = "quant.sf", full.names = TRUE)
+## Assign the relative path as the name
 names(files) <- dir(filedir)
 
 # CALC TPM FOR ALL MEIN REGIONS -------------------------------------
@@ -40,18 +62,23 @@ BEN_files = subset(files, )
 
 
 # Metadata ------------------------------------
+## Suggestion: all manual parameters on top
 actuel_etadata = read_xlsx("/Users/cschwitalla/Downloads/Metadata patients P-141L.xlsx", col_names = TRUE)
-
 metadata = read_xlsx("/Users/cschwitalla/Documents/QATLV_sample_preparations.xlsx", col_names = TRUE)
+
+## If you have a stack overflow solution write down what this function does and
+## include the link where you found it, you never know when this comes in handy
+
 # stack over flow function
 header.true <- function(df) {
   names(df) <- as.character(unlist(df[1,]))
   df[-1,]
 }
 
+## I was wondering though, why include this step?
 metadata = header.true(metadata)
 
-
+## Maybe we need to sit down to discuss what you are trying to do here
 t1_num = metadata[which(metadata$`Condition: tissues` == "T1 zone"),]
 nec_num = metadata[which(metadata$`Condition: tissues` == "Necrotic zone"),]
 inf_num = metadata[which(metadata$`Condition: tissues` == "Peritumoral infiltrating zone"),]
@@ -133,6 +160,9 @@ dds <- dds[keep,]
 
 dds <- DESeq(dds)
 
+## All of the code here (where you are comparing the conditions) can be reduced
+## significantly. See example: 
+## https://github.com/AG-Walz/Projects/blob/main/QBiC_coops/QLVMB/DEA/transcriptomics%20analysis.R#L137-L155
 
 # https://support.bioconductor.org/p/98346/
 # RESULTS----------------------------------------
@@ -177,6 +207,11 @@ plotMA(resShrink_T1_vs_INF, ylim=ylim, main = "T1 vs INF")
 
 # GET SIGNIFICANT DIFF EXP ---------------------------------------
 #include info for significance of diff expression 
+
+## Try to put functions on the top as well or in another file with other 
+## functions. This way you make sure that you collect them in one overview
+## I do this myself as well, see:
+## https://github.com/AG-Walz/Projects/blob/main/QBiC_coops/QLVMB/DEA/functions.R
 getDiffexpressed <- function(Deseq_results_dataset){
   Deseq_results_dataset$significant <- "NO"
   Deseq_results_dataset$diffexp <- "NO"

@@ -1,12 +1,32 @@
+## So personally, I like it when even the loading of the libraries is as easy as possible.
+## Therefore, you could reconsider doing the following for woud libraries:
 
-library(maftools)
-library("RColorBrewer")
-library("VennDiagram")
-library("ggplot2")
-setwd("/Users/cschwitalla/Documents/WES_data")
+## Suggestion Marissa
+## ---------------------
+## Define the libraries that you want to use
+necessaryLibs <- c("maftools", "RColorBrewer", "VennDiagram", "ggplot2",
+                   "devtools")
+devtoolsLibs <- c("McGranahanLab/TcellExTRECT")
+## Install the libraries if necessary
+# invisible(lapply(necessaryLibs, BiocManager::install, update = F, ask = F))
+## Load the libraries
+suppressMessages(invisible(lapply(necessaryLibs, library, character.only = T)))
+## Load libraries that need to be loaded in with devtools
+suppressMessages(invisible(lapply(devtoolsLibs, install_github)))
 
+## Code Carolin
+## ---------------------
+# library(maftools)
+# library("RColorBrewer")
+# library("VennDiagram")
+# library("ggplot2")
+#setwd("/Users/cschwitalla/Documents/WES_data") 
+## I can suggest to move the setwd as one of the first lines in your script
+setwd("/Users/dubbelaar/Downloads/data/") 
 
-library(TcellExTRECT)
+#library(TcellExTRECT)
+
+## In order to go to the code here, I need to have the files 
 
 # MAPPING OF PATIENT ID TO QBIC ID---------------------
 NEC_meta = read.table(file = "./PBMC_vs_Necrotic.tsv", sep = "\t", header = FALSE)
@@ -195,6 +215,9 @@ INF_meta = data.frame("Patient_ID" = infp_IDs, "QBIC_ID" = inf_qb)
 patientID_list = NEC_meta$Patient_ID
 #patientenlisten------------------------------
 
+## This is a lot of code
+## I would use an iterator 1:15 and then use that iterator to assign the values
+## to a vector with the assign function 
 p1 = c()
 p2 = c()
 p3 = c()

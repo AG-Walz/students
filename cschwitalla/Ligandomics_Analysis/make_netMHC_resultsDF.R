@@ -7,6 +7,8 @@ library("utils")
 
 setwd("/Users/cschwitalla/Documents/Ligandomics_analysis/Highfreq_peptides/")
 
+## Dont curse and be so hard on yourself in your code
+
 #HIER HABE ICH BULLSHIT GEMACHT ICH MUSS DIE CLASS II PEPTIDES AUF MHC II PREDICTEN , HIER HAB ICH DAS NUR AUF WAHRSCHEIBLICH HLA CLASS I GEMACHT ALSO 
 #NETMHCIIPAN NOCH MACHEN 
 #bei MHCII könnte ich eventuell auf den server laden aber mal sehen , weil ich hab a keine typisierung von den patienten 

@@ -2,19 +2,29 @@
 
 setwd("/Users/cschwitalla/Documents/Immunopeptidomics/")
 
-library("stringr")
-library("RColorBrewer")
-library("tidyr")
-library("dplyr")
-library("tibble")
-library("ggplot2")
-library("viridis")
-library("VennDiagram")
-library("tuple")
-library("org.Hs.eg.db") 
-library("ggVennDiagram")
-library("readxl")
+# library("stringr")
+# library("RColorBrewer")
+# library("tidyr")
+# library("dplyr")
+# library("tibble")
+# library("ggplot2")
+# library("viridis")
+# library("VennDiagram")
+# library("tuple")
+# library("org.Hs.eg.db") 
+# library("ggVennDiagram")
+# library("readxl")
 
+## Suggestion Marissa
+## ---------------------
+## Define the libraries that you want to use
+necessaryLibs <- c("stringr", "RColorBrewer", "tidyr", "dplyr", "tibble",
+                   "ggplot2", "viridis", "VennDiagram", "tuple", "org.Hs.eg.db",
+                   "ggVennDiagram", "readxl")
+## Install the libraries if necessary
+# invisible(lapply(necessaryLibs, BiocManager::install, update = F, ask = F))
+## Load the libraries
+suppressMessages(invisible(lapply(necessaryLibs, library, character.only = T)))
 
 
 # KNOWN BENIGN PEPTIDE DATA--------------------------------
@@ -23,6 +33,7 @@ GB_HLA_types = read_xlsx("/Users/cschwitalla/Documents/Ligandomics_analysis/HLA-
 #get list of unique HLA types
 HLA_Types = GB_HLA_types$`HLA-Typing`
 
+## These steps require more comments
 HLA_Types_list = c()
 for(string in HLA_Types){
   str1 = strsplit(string, ";", fixed = TRUE)
@@ -60,6 +71,8 @@ Benigniome_II_unique_acc = Benigniome_II[- grep(";", Benigniome_II$Acc),]
 
 
 #HLA Ligand Atlas =================================================
+## Try to reduce the length of your vector names, as this might lead to
+## confusion later on if there is something going wrong
 HLA_Ligand_atlas_df = read.csv("./hla_2020.12/HLA_aggregated.tsv", header = TRUE, sep= "\t")
 HLA_Ligand_acc_df = read.csv("./hla_2020.12/HLA_protein_map.tsv", header = TRUE, sep = "\t")
 #get mapping frequencie for every peptide id 
@@ -161,6 +174,7 @@ BEN_classI = classI_df[classI_df$Tumor_region == "BEN", ]
 BEN_classII = classII_df[classII_df$Tumor_region == "BEN", ]
 
 #unique mappers
+## For loop with NEC, T1, INF, and BEN and use assign function
 NEC_I_uniqe_acc= classI_uniqe_mappers[classI_uniqe_mappers$Tumor_region == "NEC",]
 NEC_II_uniqe_acc = classII_uniqe_mappers[classII_uniqe_mappers$Tumor_region == "NEC",]
 
