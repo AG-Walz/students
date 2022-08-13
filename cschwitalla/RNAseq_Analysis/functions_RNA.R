@@ -135,16 +135,20 @@ create_annotation_color <- function(patient_column,
 ## PARAMETERS:
 ##             - gene_selection: gene names that will be plotted [vector]
 ##             - vsd: transformed count data object from DESeq2 [DESeq2_obj]
-##             - batch: column in metadata for which batch correction
-##                      should be performed [string]
+##             - batch: column in vsd df for which batch correction
+##                      should be performed [vector]
 ## OUTPUT: heatmap of selected genes with metadata column annotation
-make_heatmap <- function(gene_selection, vsd, batch, annotation_color) {
+make_heatmap <- function(gene_selection, vsd, batch, annotation_color, k) {
   # get vst normalized counts df for gene selection
   vsd_mat <- as.data.frame(assay(vsd)) %>%
     dplyr::filter(row.names(assay(vsd)) %in% gene_selection)
-
+# remove batch effects with limma because it was suggested by deseq2 authors
+# https://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html
   if (!is.null(batch)) {
-    vsd_rm_batch <- limma::removeBatchEffect(vsd_mat, vsd$batch)
+    design_matrix <- model.matrix(~Tumor_region, colData(vsd))
+    vsd_rm_batch <- limma::removeBatchEffect(vsd_mat,
+                                             batch,
+                                             design = design_matrix)
     vsd_mat <- vsd_rm_batch
   }
   # annotation for heatmap
@@ -154,13 +158,87 @@ make_heatmap <- function(gene_selection, vsd, batch, annotation_color) {
     "Sex" = vsd@colData@listData$Sex,
     "MGMT_methylation" = vsd@colData@listData$MGMT
   )
+  if (!is.null(k)) {
+    pheatmap(
+      vsd_mat,
+      scale = "row", # genes = rows are z-score transformed
+      show_rownames = FALSE,
+      annotation_col = annotation_df,
+      annotation_colors = annotation_color,
+      kmeans_k = k
+    )
+  } else {
+    pheatmap(
+      vsd_mat,
+      scale = "row", # genes = rows are z-score transformed
+      show_rownames = FALSE,
+      annotation_col = annotation_df,
+      annotation_colors = annotation_color,
+      cutree_cols = 4
+    )
+  }
+# 
+#   # draw heatmap
+#   pheatmap(
+#     vsd_mat,
+#     scale = "row", # genes = rows are z-score transformed
+#     show_rownames = FALSE,
+#     annotation_col = annotation_df,
+#     annotation_colors = annotation_color
+#   )
+}
 
-  # draw heatmap
-  pheatmap(
-    vsd_mat,
-    scale = "row", # genes = rows are z-score transformed
-    show_rownames = FALSE,
-    annotation_col = annotation_df,
-    annotation_colors = annotation_color
-  )
+
+
+## DESCRIPTION: function that plots PCA with or without batch correction
+## PARAMETERS:
+##             - dds_default: dds object from DESeq2 [dds object]
+##             - batch: vsd column of the batch [vsd column]
+##
+## OUTPUT: PCA plot
+plot_pca <- function(dds_default, batch) {
+  vsd <- vst(dds_default, blind = FALSE)
+  vsd_mat <- assay(vsd)
+  if (!is.null(batch)) {
+    design_matrix <- model.matrix(~Tumor_region, colData(vsd))
+    vsd_rm_batch <- limma::removeBatchEffect(vsd_mat,
+                                             batch,
+                                             design = design_matrix)
+    vsd_mat <- vsd_rm_batch
+  }
+  assay(vsd) <- vsd_mat
+  plotPCA(vsd, intgroup = "Tumor_region")
+}
+
+
+
+## DESCRIPTION: function that plots historams of raw counts for each sample
+## PARAMETERS:
+##             - txi_data: txi object with raw counts data [txi object]
+##             - col_row_num: set panels for plotting window [vector]
+##             - sample_num: number of samples that should be plotted [numeric]
+##             - xlim: x axis limits (lower & upper) for each histogram [vector]
+##             - ylim: y axis limits (lower & upper) for each histogram [vector]
+##             - breaks: breaks for each histogram [numeric]
+## OUTPUT: for each sample a histogram of raw counts distribution is plotted
+plot_rawcounts_hist <- function(txi_data,
+                                col_row_num,
+                                sample_num,
+                                xlim,
+                                ylim,
+                                breaks) {
+  # creat df of rounded raw count from the txi object
+  data <- txi_data$counts %>%
+    round() %>%
+    data.frame()
+  # plot raw counts histograms for each sample side by side
+  par(mfrow = col_row_num) # define panels
+  for (sample in 1:sample_num) {
+    hist(data[, sample],
+      breaks = breaks,
+      xlim = xlim,
+      ylim = ylim,
+      main = sample
+    )
+  }
 }

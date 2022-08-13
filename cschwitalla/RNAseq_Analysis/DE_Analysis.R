@@ -23,8 +23,6 @@
 ################################################################################
 # clear R environment
 rm(list = ls())
-# set working dir
-#setwd("/Users/cschwitalla/Documents/transcriptomics_results/Pipeline_running/transcriptomics_results/Quant_files/")
 # set directory of the input files for the analysis
 input_dir <- "/Users/cschwitalla/Documents/transcriptomics_results/Pipeline_running/transcriptomics_results/Quant_files/"
 # set output directory for results table and plots
@@ -46,7 +44,7 @@ required_libs <- c(
 )
 
 
-suppressMessages(invisible(lapply(required_libs, library, character.only = T)))
+suppressMessages(invisible(lapply(required_libs, library, character.only = TRUE)))
 
 
 ################################################################################
@@ -54,24 +52,36 @@ suppressMessages(invisible(lapply(required_libs, library, character.only = T)))
 ################################################################################
 # Load meta data --> Metadata_GB.tsv in workdir
 metadata <- read.table(file = metadata_file, sep = "\t", header = TRUE)
+metadata2 <- metadata[-grep(("QATLV129AQ|QATLV139AX|QATLV162AW|QATLV171AV|QATLV188AQ"),metadata$QBiC.Code),]
 # get filenames of inputDir
 file_names <- list.files(path = input_dir)
+# files without ben + outlier sample
+filnames_excl <- grep(("NEC|INF|T1"), file_names, value = TRUE)
+filnames_excl <- filnames_excl[c(1:7,9:45)]
 # TO DO: create/ import tx2gene dataframe
 tx2gene <- create_tx2gene()
 # import Salmon quant files with tximport and tx2gene
-txi <- tximport(file_names, type = "salmon", tx2gene = tx2gene)
+txi <- tximport(paste0(input_dir, file_names), type = "salmon", tx2gene = tx2gene)
+txi2 <- tximport(paste0(input_dir, filnames_excl), type = "salmon", tx2gene = tx2gene)
+
 # make Deseq2 object of raw read counts and specify metadata and project design
 dds <- DESeqDataSetFromTximport(txi,
   colData = metadata,
   design = ~Tumor_region
 )
+dds2 <- DESeqDataSetFromTximport(txi2,
+                                colData = metadata2,
+                                design = ~Tumor_region
+)
 # pre filtering, keep only rows with at least 10 reads total
 # WHY:reduces computation time and memory usage
 keep <- rowSums(counts(dds)) >= 10
 dds <- dds[keep, ]
+dds2 <- dds2[keep, ]
 # model read counts, estimate LFCs and test for DE expressed genes
 # with default parameters
 dds_default <- DESeq(dds)
+dds_minor <- DESeq(dds2)
 ################################################################################
 ###                            DE_Analysis                                   ###
 ################################################################################
@@ -101,14 +111,53 @@ for (com in apply(combn(levels(dds_default$Tumor_region), 2), 2, paste, collapse
 ################################################################################
 ###                              Heatmap                                     ###
 ################################################################################
+set.seed(8)
 # varianze stabilizing transformation of the data to plot as heatmap
-vsd <- vst(dds, blind = FALSE)
+vsd <- vst(dds_minor, blind = FALSE)
 # create list of annotation colors for heatmap plotting
-annotation_color <- create_annotation_color(metadata$Patient_ID,
-                                            metadata$Tumor_region,
-                                            metadata$Sex,
-                                            metadata$MGMT)
+annotation_color <- create_annotation_color(
+  metadata$Patient_ID,
+  metadata$Tumor_region,
+  metadata$Sex,
+  metadata$MGMT
+)
 # plot heatmap with bacth corection for Patientens
-make_heatmap(DE_genes, vsd, "Patient_ID", annotation_color)
+make_heatmap(DE_genes, vsd, vsd$Patient_ID, annotation_color, k = NULL)
 # plot without batch correction
-make_heatmap(DE_genes, vsd, batch = NULL)
+make_heatmap(DE_genes, vsd, batch = NULL, annotation_color)
+
+#make_heatmap(DE_genes, vsd, vsd$Patient_ID, annotation_color, k = 4)
+################################################################################
+###                               PCA                                        ###
+################################################################################
+# plot pca with batch correction
+plot_pca(dds_default = dds_default, batch = vsd$Patient_ID)
+# plot oca without batch correction
+plot_pca(dds_default = dds_default, batch = NULL)
+
+
+
+# Inspection--------------------------------------
+par(mar=c(8,5,2,2))
+boxplot(log10(assays(dds_default)[["cooks"]]), range=0, las=2)
+
+res <- results(dds_default)
+plotDispEsts(dds_default)
+
+# TODO: make a function out of it  ---------------------------------------------
+sampleDists <- dist(t(assay(vsd)))
+
+
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- paste(vsd$Tumor_region, vsd$Patient_ID, sep = "-")
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
+pheatmap(sampleDistMatrix,
+  clustering_distance_rows = sampleDists,
+  clustering_distance_cols = sampleDists,
+  col = colors
+)
+
+# test for enrichment analyiss and stuff----------------------------------------
+# ensembla and org db sind nicht vergleichbar und deshlab lieber nicht mischen
+# muss hier ne gute lösung finden

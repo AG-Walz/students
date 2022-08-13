@@ -22,7 +22,51 @@ vc_cols <- setNames(
 ################################################################################
 ###                                Functions                                 ###
 ################################################################################
+#oncogenic pathways
+onco_pathways <- function(maf, output_dir, dir) {
+  pdf(paste0(output_dir, names(region_dir)[match(dir, region_dir)],"_onco_pathway.pdf"),
+      width = 7,
+      height = 8)
+  OncogenicPathways(maf = maf)
+  dev.off()
+}
 
+
+# tcga compare
+tcga_comapre <- function(maf, dir, kit_size, output_dir) {
+  pdf(paste0(output_dir, names(region_dir)[match(dir, region_dir)],"_mutload.pdf"),
+      width = 10,
+      height = 5)
+  tcgaCompare(maf = maf, cohortName = names(region_dir)[match(dir, region_dir)], logscale = TRUE, capture_size = kit_size/1000000)
+  dev.off()
+}
+
+
+
+#make oncoplot pdf
+make_oncoplot <- function(output_dir, region_dir, maf, anno_color, title, genes, sample_order) {
+
+    pdf(paste0(output_dir, names(region_dir)[match(dir, region_dir)], title,"_oncoplot.pdf"),
+        width = 10,
+        height = 8)
+    # make oncoplot for current maf that will exported as pdf in the output dir
+    oncoplot(
+      maf = maf,
+      genes = genes,
+      draw_titv = FALSE,
+      clinicalFeatures = c("Tumor_region", "Patient_ID"),
+      leftBarData = compute_vaf(maf), # see function script
+      annotationColor = anno_color, # see function script
+      colors = vc_cols,
+      sampleOrder = sample_order,
+      sortByAnnotation = TRUE,
+      gene_mar = 6
+    )# see function script
+    dev.off()
+
+    
+  
+}
 # Variant allel Frequency
 # ----- from Rike
 # Calculate Varaint allele frequency
