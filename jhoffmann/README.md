@@ -34,7 +34,7 @@ Jupyter notebook containing the comparison of epicore and [IEDBcluster](https://
 `NELDE_2021.ipynb` contains the candidate selection phase for a CLL peptide warehouse based on data from [NELDE et al.](https://doi.org/10.3389/fimmu.2021.705974). 
 Furthermore, it contains a comparison of different epicore modes in the candidate selection phase as well as a comparison of the candidate selection with and without epicore. 
 Additionally, it comprises an analysis of by Nelde et al. identified warehouse peptides. 
-`CLL_HEITMANN_2026.ipynb` contains an analysis of data from [HEITMANN et al.](https://doi.org/10.3389/fimmu.2024.1482715) with epicore. 
+`CLL_HEITMANN_2026.ipynb` contains an analysis of data from [HEITMANN et al.](https://doi.org/10.1016/S2352-3026(25)00323-0) with epicore. 
 
 ### Epicore in HNSCC peptide warehouse development
 Jupyter notebook containing the candidate selection phase for a HNSCC peptide warehouse as well as the analysis of peptides currently selected for a HNSCC warehouse. 
